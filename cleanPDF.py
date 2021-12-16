@@ -5,10 +5,12 @@ except ModuleNotFoundError:
     raise SystemExit
 
 
-class cleanPDF:
-    def __init__(self, fileIn, fileOut):
+class deduplicate:
+    def __init__(self, fileIn, fileOut=None):
         self.inPDF = pdf.PdfFileReader(fileIn, 'rb')
         self.keepPages = self.__listPages()
+        if not fileOut:
+            fileOut = '#'+fileIn
         self.__create(fileOut)
 
     def __listPages(self):
@@ -49,22 +51,33 @@ class cleanPDF:
         try:
             with open(fileOut, 'wb') as file:
                 outPDF.write(file)
-                print("deDuplicated PDF saved as",fileOut)
-                print("Kept {} pages out of {} pages".format(outPDF.getNumPages(),self.inPDF.getNumPages()))
+                print("deduplicated PDF saved as", fileOut)
+                print("Removed {} pages out of {} pages".format(self.inPDF.getNumPages() - outPDF.getNumPages(), self.inPDF.getNumPages()))
         except PermissionError:
             print("The file is open in some other program or you don't have permission to create file.")
 
 
 if __name__ == "__main__":
-    try:
-        pdfIN = input("Enter name of input the pdf : ")
-        if(pdfIN[-4:].lower() != '.pdf'):
-            pdfIN+='.pdf'
-        pdfOut = input("Enter name of the output pdf (leave it blank for the default name '#{}') : ".format(pdfIN))
-        if not pdfOut:
-            pdfOut = '#'+pdfIN
-        elif (pdfOut[-4:].lower() != '.pdf'):
-            pdfOut+='.pdf'
-        cleanPDF(pdfIN, pdfOut)
-    except FileNotFoundError:
-        print("Make sure that the file '{}' exist in the current directory".format(pdfIN))
+    import glob
+    ls = glob.glob("*.pdf")
+    opt = input("\n1. deduplicate a particular pdf file\n2. deduplicate all pdf files in the current directory\nEnter your input : ")
+    if opt == '1':
+        try:
+            print("\nList of pdf files in the current directory : ")
+            for i in ls:
+                print(i)
+            pdfIN = input("\nEnter name of input the pdf : ")
+            if(pdfIN[-4:].lower() != '.pdf'):
+                pdfIN += '.pdf'
+            pdfOut = input("Enter name of the output pdf (leave it blank for the default name '#{}') : ".format(pdfIN))
+            if not pdfOut:
+                pdfOut = '#'+pdfIN
+            elif (pdfOut[-4:].lower() != '.pdf'):
+                pdfOut += '.pdf'
+            deduplicate(pdfIN, pdfOut)
+        except FileNotFoundError:
+            print("Make sure that the file '{}' exist in the current directory".format(pdfIN))
+    elif opt == '2':
+        print("")
+        for i in ls:
+            deduplicate(i)
